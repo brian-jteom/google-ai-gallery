@@ -486,7 +486,7 @@ export default function GalleryForm({ item, mode }: GalleryFormProps) {
               <strong>키보드에서 <kbd className="px-2 py-1 bg-white rounded border border-indigo-200 font-mono">Ctrl + V</kbd> (Mac: <kbd className="px-2 py-1 bg-white rounded border border-indigo-200 font-mono">Cmd + V</kbd>)</strong>를 누르세요
             </li>
             <li>
-              자동으로 업로드되고 미리보기가 표시됩니다! 🎉
+              자동으로 업로드되고 미리보기가 표시됩니다!
             </li>
           </ol>
           {pasteReady && (
