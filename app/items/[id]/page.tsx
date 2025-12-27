@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createServerClient } from '@/lib/supabase/server';
 import type { GalleryItem } from '@/lib/types';
+import LikeButton from '@/components/LikeButton';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -176,13 +177,26 @@ export default async function ItemPage({ params }: PageProps) {
                   <h1 className="text-3xl font-bold text-gray-900 mb-2 leading-tight">
                     {item.title}
                   </h1>
-                  <time className="text-sm text-gray-500 block mb-6">
-                    {new Date(item.created_at).toLocaleDateString('ko-KR', {
-                       year: 'numeric',
-                       month: 'long',
-                       day: 'numeric',
-                    })}
-                  </time>
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span className="font-medium text-gray-900">
+                        {item.nickname || '익명'}
+                      </span>
+                      <span>•</span>
+                      <time>
+                        {new Date(item.created_at).toLocaleDateString('ko-KR', {
+                           year: 'numeric',
+                           month: 'long',
+                           day: 'numeric',
+                        })}
+                      </time>
+                    </div>
+                    
+                    {/* Like Button */}
+                    <div className="ml-auto">
+                        <LikeButton itemId={item.id} initialLikes={item.like_count || 0} />
+                    </div>
+                  </div>
 
                   <a
                     href={item.link}
@@ -198,7 +212,7 @@ export default async function ItemPage({ params }: PageProps) {
                   
                   {/* Tags */}
                   {item.tags && item.tags.length > 0 && (
-                     <div className="flex flex-wrap gap-2">
+                     <div className="flex flex-wrap gap-2 mb-6">
                        {item.tags.map((tag: string) => (
                          <span key={tag} className="text-sm text-gray-500 hover:text-indigo-600 transition-colors cursor-pointer">
                             #{tag}

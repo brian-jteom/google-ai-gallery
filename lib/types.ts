@@ -10,6 +10,11 @@ export interface GalleryItem {
   tags?: string[] | null;
   thumbnail_url?: string | null;
   created_at: string;
+  nickname?: string | null;
+  password?: string | null;
+  view_count?: number;
+  like_count?: number;
+  user_id?: string | null;
 }
 
 export interface GalleryItemCreate {
@@ -20,6 +25,9 @@ export interface GalleryItemCreate {
   description?: string | null;
   tags?: string[] | null;
   thumbnail_url?: string | null;
+  nickname?: string | null;
+  password?: string | null;
+  user_id?: string | null;
 }
 
 export interface YoutubeItem {

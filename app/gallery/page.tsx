@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { createServerClient } from '@/lib/supabase/server';
 import type { GalleryItem } from '@/lib/types';
+import GalleryControls from '@/components/GalleryControls';
 
 export const metadata: Metadata = {
   title: '갤러리 - AI Studio Gallery',
@@ -11,16 +12,43 @@ export const metadata: Metadata = {
 
 export const revalidate = 60;
 
-export default async function GalleryPage() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function GalleryPage({ searchParams }: PageProps) {
   let galleryItems: GalleryItem[] = [];
+  const params = await searchParams;
+  
+  const sort = typeof params.sort === 'string' ? params.sort : 'latest';
+  const nickname = typeof params.nickname === 'string' ? params.nickname : undefined;
+  const category = typeof params.category === 'string' ? params.category : undefined; // Existing category structure uses path params, but checking just in case
+  // Actually, category is handled via /category/[category] page, not here. 
+  // Wait, the filter bar links to /category/..., so this page is "All".
+  // But if I want to support sort on category page, I need to update that page too.
+  // The user interaction "Ranking" and "My Uploads" is mainly on the main gallery.
+  // I will focus on this page first.
 
   try {
     const supabase = createServerClient();
-    const { data: items, error } = await supabase
+    
+    let query = supabase
       .from('tb_ai_gallery_items')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .select('*');
+
+    // Filter by nickname if present
+    if (nickname) {
+       query = query.eq('nickname', nickname);
+    }
+
+    // Sort
+    if (sort === 'popular') {
+       query = query.order('like_count', { ascending: false }).order('created_at', { ascending: false });
+    } else {
+       query = query.order('created_at', { ascending: false });
+    }
+
+    const { data: items, error } = await query.limit(100);
 
     if (error) console.error('Error fetching items:', error);
     galleryItems = (items || []) as GalleryItem[];
@@ -45,7 +73,7 @@ export default async function GalleryPage() {
                 Gallery
               </h1>
               <p className="text-lg text-gray-500">
-                {galleryItems.length}개의 AI 창작물을 탐험해보세요
+                {nickname ? `'${nickname}'님의 컬렉션` : (sort === 'popular' ? '인기 작품 랭킹' : `${galleryItems.length}개의 AI 창작물을 탐험해보세요`)}
               </p>
             </div>
             <Link
@@ -102,6 +130,8 @@ export default async function GalleryPage() {
                 {p.name}
               </Link>
             ))}
+
+            <GalleryControls />
           </div>
         </div>
       </section>

@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const category = searchParams.get('category');
     const q = searchParams.get('q');
+    const sort = searchParams.get('sort') || 'latest';
+    const nickname = searchParams.get('nickname');
     const limit = Math.min(parseInt(searchParams.get('limit') || '24'), 100);
     const offset = Math.max(parseInt(searchParams.get('offset') || '0'), 0);
 
@@ -16,9 +18,17 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('tb_ai_gallery_items')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .select('*');
+
+    // Sorting
+    if (sort === 'popular') {
+      query = query.order('like_count', { ascending: false }).order('created_at', { ascending: false });
+    } else {
+      query = query.order('created_at', { ascending: false });
+    }
+
+    // Pagination
+    query = query.range(offset, offset + limit - 1);
 
     if (category) {
       query = query.eq('category', category);
@@ -26,6 +36,10 @@ export async function GET(request: NextRequest) {
 
     if (q) {
       query = query.ilike('title', `%${q}%`);
+    }
+
+    if (nickname) {
+       query = query.eq('nickname', nickname);
     }
 
     const { data, error } = await query;
@@ -65,6 +79,34 @@ export async function POST(request: NextRequest) {
 
     const itemData: GalleryItemCreate = validationResult.data;
     const supabase = createServerClient();
+
+    // Check for authenticated session
+    const { getSession } = await import('@/lib/auth');
+    const session = await getSession();
+
+    if (session) {
+      // Logged in user: use user_id, no password hash needed
+      itemData.user_id = session.userId;
+      
+      const user = await supabase
+        .from('tb_ai_gallery_users')
+        .select('nickname')
+        .eq('id', session.userId)
+        .single();
+        
+      if (user.data) {
+        itemData.nickname = user.data.nickname;
+      }
+      // No password for authenticated items
+      itemData.password = null; 
+    } else {
+      // Anonymous: Password hashing (simple)
+      if (itemData.password) {
+        // In a real app, use bcrypt. Here we use simple hashing for the anonymous board.
+        const { createHash } = await import('node:crypto');
+        itemData.password = createHash('sha256').update(itemData.password).digest('hex');
+      }
+    }
 
     const { data, error } = await supabase
       .from('tb_ai_gallery_items')

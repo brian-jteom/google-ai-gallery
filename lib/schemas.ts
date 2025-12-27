@@ -10,6 +10,8 @@ export const itemCreateSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   tags: z.array(z.string()).optional().nullable(),
   thumbnail_url: z.string().url().optional().nullable(),
+  nickname: z.string().max(30).optional().nullable(),
+  password: z.string().max(100).optional().nullable(),
 });
 
 export const itemReadSchema = itemCreateSchema.extend({

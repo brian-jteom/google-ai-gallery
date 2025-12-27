@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { Bot, LayoutGrid, MonitorPlay, BookOpen } from 'lucide-react';
+import AuthButton from './AuthButton';
 
 export default function Navigation() {
   const pathname = usePathname();
